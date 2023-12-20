@@ -99,34 +99,19 @@ public class FetchPlugin extends CordovaPlugin {
                     }
 
                     @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-
+                     public void onResponse(Call call, Response response) throws IOException {
                         JSONObject result = new JSONObject();
                         try {
-                            Headers responseHeaders = response.headers();
-
-                            JSONObject allHeaders = new JSONObject();
-
-                            if (responseHeaders != null ) {
-                                for (int i = 0; i < responseHeaders.size(); i++) {
-                                    if (responseHeaders.name(i).compareToIgnoreCase("set-cookie") == 0 &&
-                                        allHeaders.has(responseHeaders.name(i))) {
-                                        allHeaders.put(responseHeaders.name(i), allHeaders.get(responseHeaders.name(i)) + ",\n" + responseHeaders.value(i));
-                                        continue;
-                                    }
-                                    allHeaders.put(responseHeaders.name(i), responseHeaders.value(i));
-                                }
+                            // Fetch the content-disposition header from the response headers
+                            String contentDisposition = response.headers().get("content-disposition");
+                            // Create a JSONObject to store just the content-disposition
+                            JSONObject contentDispositionObject = new JSONObject();
+                            if (contentDisposition != null) {
+                                contentDispositionObject.put("content-disposition", contentDisposition);
                             }
-
-                            result.put("headers", allHeaders);
-
-                            if (response.body().contentType().type().equals("image")) {
-                                result.put("isBlob", true);
-                                result.put("body", Base64.encodeToString(response.body().bytes(), Base64.DEFAULT));
-                            } else {
-                                result.put("body", response.body().string());
-                            }
-
+                            // Add the content-disposition to the main result object
+                            result.put("headers", contentDispositionObject);
+                            // You can add other relevant details to the result if needed
                             result.put("statusText", response.message());
                             result.put("status", response.code());
                             result.put("url", response.request().url().toString());
@@ -134,12 +119,51 @@ public class FetchPlugin extends CordovaPlugin {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-
+                        // Log the result for debugging
                         Log.v(LOG_TAG, "HTTP code: " + response.code());
-                        Log.v(LOG_TAG, "returning: " + result.toString());
-
+                        Log.v(LOG_TAG, "Returning: " + result.toString());
                         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
                     }
+                    // public void onResponse(Call call, Response response) throws IOException {
+                    //     JSONObject result = new JSONObject();
+                    //     try {
+                    //         Headers responseHeaders = response.headers();
+
+                    //         JSONObject allHeaders = new JSONObject();
+
+                    //         if (responseHeaders != null ) {
+                    //             for (int i = 0; i < responseHeaders.size(); i++) {
+                    //                 if (responseHeaders.name(i).compareToIgnoreCase("set-cookie") == 0 &&
+                    //                     allHeaders.has(responseHeaders.name(i))) {
+                    //                     allHeaders.put(responseHeaders.name(i), allHeaders.get(responseHeaders.name(i)) + ",\n" + responseHeaders.value(i));
+                    //                     continue;
+                    //                 }
+                    //                 allHeaders.put(responseHeaders.name(i), responseHeaders.value(i));
+                    //             }
+                    //         }
+
+                    //         result.put("headers", allHeaders);
+
+                    //         if (response.body().contentType().type().equals("image")) {
+                    //             result.put("isBlob", true);
+                    //             result.put("body", Base64.encodeToString(response.body().bytes(), Base64.DEFAULT));
+                    //         } else {
+                    //             result.put("body", response.body().string());
+                    //         }
+
+                    //         result.put("statusText", response.message());
+                    //         result.put("status", response.code());
+                    //         result.put("url", response.request().url().toString());
+
+                    //     } catch (Exception e) {
+                    //         e.printStackTrace();
+                    //     }
+
+                    //     Log.v(LOG_TAG, "HTTP code: " + response.code());
+                    //     Log.v(LOG_TAG, "returning: " + result.toString());
+
+                    //     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+                    // }
                 });
 
             } catch (JSONException e) {
